@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Gestión de Usuarios')}"></head>
+
+<body>
+
+<!-- BARRA SUPERIOR -->
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="d-flex">
+
+    <!-- MENÚ LATERAL -->
+    <div th:replace="~{fragments/layout :: sidebar('usuarios')}"></div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-grow-1 p-4">
+
+        <!-- ENCABEZADO -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+                <h2>
+                    <i class="bi bi-people-fill"></i>
+                    Gestión de Usuarios
+                </h2>
+
+                <p class="text-muted">
+                    Administración de usuarios del sistema
+                </p>
+            </div>
+
+            <a th:href="@{/usuarios/nuevo}"
+               class="btn btn-primary">
+                <i class="bi bi-person-plus"></i>
+                Nuevo Usuario
+            </a>
+
+        </div>
+
+        <!-- MENSAJE DE ÉXITO -->
+        <div th:if="${msg}"
+             class="alert alert-success alert-dismissible fade show"
+             role="alert">
+
+            <i class="bi bi-check-circle me-2"></i>
+            <span th:text="${msg}"></span>
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Cerrar">
+            </button>
+        </div>
+
+        <!-- MENSAJE DE ERROR -->
+        <div th:if="${error}"
+             class="alert alert-danger alert-dismissible fade show"
+             role="alert">
+
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span th:text="${error}"></span>
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Cerrar">
+            </button>
+        </div>
+
+        <!-- TABLA DE USUARIOS -->
+        <div class="card shadow-sm">
+
+            <div class="card-header bg-dark text-white">
+                <i class="bi bi-list-ul"></i>
+                Usuarios Registrados
+            </div>
+
+            <div class="card-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-striped table-hover align-middle">
+
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Correo</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <!-- USUARIOS REGISTRADOS -->
+                            <tr th:each="usuario : ${usuarios}">
+
+                                <td th:text="${usuario.idUs}"></td>
+
+                                <td th:text="${usuario.nomUs}"></td>
+
+                                <td th:text="${usuario.emailUs}"></td>
+
+                                <!-- ROL -->
+                                <td>
+                                    <span class="badge bg-primary"
+                                          th:text="${usuario.rolUs}">
+                                    </span>
+                                </td>
+
+                                <!-- ESTADO -->
+                                <td>
+                                    <span th:if="${usuario.activo}"
+                                          class="badge bg-success">
+                                        Activo
+                                    </span>
+
+                                    <span th:unless="${usuario.activo}"
+                                          class="badge bg-danger">
+                                        Inactivo
+                                    </span>
+                                </td>
+
+                                <!-- ACCIONES -->
+                                <td class="text-center">
+
+                                    <!-- NO PERMITIR DESACTIVAR LA CUENTA ACTUAL -->
+                                    <span th:if="${usuario.idUs == session.usuarioLogueado}"
+                                          class="badge bg-secondary">
+                                        Tu cuenta
+                                    </span>
+
+                                    <!-- DESACTIVAR USUARIO ACTIVO -->
+                                    <form th:if="${usuario.activo == true
+                                                   and usuario.idUs != session.usuarioLogueado}"
+                                          th:action="@{/usuarios/desactivar/{id}(id=${usuario.idUs})}"
+                                          method="post"
+                                          class="d-inline"
+                                          onsubmit="return confirm('¿Está seguro de desactivar este usuario? Ya no podrá iniciar sesión.');">
+
+                                        <!-- TOKEN CSRF SI ESTÁ DISPONIBLE -->
+                                        <input th:if="${_csrf != null}"
+                                               type="hidden"
+                                               th:name="${_csrf.parameterName}"
+                                               th:value="${_csrf.token}"/>
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                                title="Desactivar usuario">
+
+                                            <i class="bi bi-person-x"></i>
+                                            Desactivar
+
+                                        </button>
+
+                                    </form>
+
+                                    <!-- CUENTA INACTIVA -->
+                                    <span th:if="${usuario.activo == false}"
+                                          class="text-muted small">
+                                        Desactivado
+                                    </span>
+
+                                </td>
+
+                            </tr>
+
+                            <!-- SIN USUARIOS -->
+                            <tr th:if="${#lists.isEmpty(usuarios)}">
+                                <td colspan="6"
+                                    class="text-center text-muted py-4">
+                                    No hay usuarios registrados.
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<!-- PIE DE PÁGINA -->
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+</body>
+</html>

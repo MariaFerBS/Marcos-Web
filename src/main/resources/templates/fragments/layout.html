@@ -1,0 +1,330 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- ============================================================
+     FRAGMENT: HEAD
+     ============================================================ -->
+<head th:fragment="head(titulo)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <title th:text="${titulo} + ' | Inventario Abarrotes'">
+        Inventario
+    </title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"/>
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+          rel="stylesheet"/>
+
+    <!-- Estilos personalizados -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            width: 240px;
+        }
+
+        .sidebar .nav-link {
+            color: #cfd8dc;
+            border-radius: 6px;
+            padding: .5rem .75rem;
+            transition: background-color .2s;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #0d6efd;
+            color: #fff;
+        }
+
+        .sidebar .section-title {
+            font-size: .75rem;
+            color: #adb5bd;
+            padding: .5rem .75rem;
+            font-weight: 600;
+        }
+
+        .sidebar button.nav-link {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     FRAGMENT: NAVBAR SUPERIOR
+     ============================================================ -->
+<nav th:fragment="navbar"
+     class="navbar navbar-dark bg-dark px-3 shadow-sm">
+
+    <div class="container-fluid">
+
+        <span class="navbar-brand mb-0 h1">
+            <i class="bi bi-box-seam"></i>
+            Sistema de Inventario
+        </span>
+
+        <div class="d-flex align-items-center text-white">
+
+            <i class="bi bi-person-circle fs-4 me-2"></i>
+
+            <div class="d-flex flex-column">
+
+                <span th:text="${session.nombreUsuario != null ? session.nombreUsuario : 'Usuario'}">
+                    Usuario
+                </span>
+
+                <small class="text-info"
+                       th:text="${session.rolUsuario}">
+                    ROL
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+</nav>
+
+
+<!-- ============================================================
+     FRAGMENT: SIDEBAR - MENÚ LATERAL DINÁMICO
+     ============================================================ -->
+<nav th:fragment="sidebar(activo)"
+     class="sidebar bg-dark d-flex flex-column p-3">
+
+    <ul class="nav flex-column">
+
+        <!-- ====================================================
+             OPCIONES PARA ADMINISTRADOR Y VENDEDOR
+             ==================================================== -->
+
+        <!-- DASHBOARD -->
+        <li class="nav-item mb-1">
+
+            <a th:href="@{/dashboard}"
+               th:classappend="${activo == 'dashboard'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-speedometer2 me-2"></i>
+                Dashboard
+
+            </a>
+        </li>
+
+
+        <!-- PRODUCTOS -->
+        <li class="nav-item mb-1">
+
+            <a th:href="@{/productos}"
+               th:classappend="${activo == 'productos'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-box-seam me-2"></i>
+                Productos
+
+            </a>
+        </li>
+
+
+        <!-- REGISTRAR VENTA -->
+        <li class="nav-item mb-1">
+
+            <a th:href="@{/ventas/nueva}"
+               th:classappend="${activo == 'ventas'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-cart-plus me-2"></i>
+                Registrar Venta
+
+            </a>
+        </li>
+
+
+        <!-- ====================================================
+             OPCIONES EXCLUSIVAS DEL ADMINISTRADOR
+             ==================================================== -->
+
+        <li class="section-title mt-3"
+            th:if="${session.rolUsuario == 'ADMIN'}">
+
+            ADMINISTRACIÓN
+
+        </li>
+
+
+        <!-- CATEGORÍAS -->
+        <li class="nav-item mb-1"
+            th:if="${session.rolUsuario == 'ADMIN'}">
+
+            <a th:href="@{/categorias}"
+               th:classappend="${activo == 'categorias'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-tags me-2"></i>
+                Categorías
+
+            </a>
+        </li>
+
+
+        <!-- PROVEEDORES -->
+        <li class="nav-item mb-1"
+            th:if="${session.rolUsuario == 'ADMIN'}">
+
+            <a th:href="@{/proveedores}"
+               th:classappend="${activo == 'proveedores'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-truck me-2"></i>
+                Proveedores
+
+            </a>
+        </li>
+
+
+        <!-- MOVIMIENTOS -->
+        <li class="nav-item mb-1"
+            th:if="${session.rolUsuario == 'ADMIN'}">
+
+            <a th:href="@{/movimientos}"
+               th:classappend="${activo == 'movimientos'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-arrow-left-right me-2"></i>
+                Entrada Mercancía
+
+            </a>
+        </li>
+
+
+        <!-- GESTIÓN DE USUARIOS -->
+        <li class="nav-item mb-1"
+            th:if="${session.rolUsuario == 'ADMIN'}">
+
+            <a th:href="@{/usuarios}"
+               th:classappend="${activo == 'usuarios'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-people-fill me-2"></i>
+                Gestión de Usuarios
+
+            </a>
+        </li>
+
+
+        <!-- ====================================================
+             GRÁFICOS: SOLO ADMINISTRADOR
+             ==================================================== -->
+
+        <li class="section-title mt-3"
+            th:if="${session.rolUsuario == 'ADMIN'}">
+
+            GRÁFICOS
+
+        </li>
+
+
+        <!-- GRÁFICO DE BARRAS -->
+        <li class="nav-item mb-1"
+            th:if="${session.rolUsuario == 'ADMIN'}">
+
+            <a th:href="@{/graficos/barras}"
+               th:classappend="${activo == 'barras'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-bar-chart-line me-2"></i>
+                Barras y Líneas
+
+            </a>
+        </li>
+
+
+        <!-- GRÁFICO CIRCULAR -->
+        <li class="nav-item mb-1"
+            th:if="${session.rolUsuario == 'ADMIN'}">
+
+            <a th:href="@{/graficos/circular}"
+               th:classappend="${activo == 'circular'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-pie-chart me-2"></i>
+                Circular
+
+            </a>
+        </li>
+
+    </ul>
+
+
+    <!-- ====================================================
+         CERRAR SESIÓN
+         ==================================================== -->
+
+    <div class="mt-auto pt-3 border-top border-secondary">
+
+        <form th:action="@{/logout}" method="post">
+
+            <input type="hidden"
+                   th:name="${_csrf.parameterName}"
+                   th:value="${_csrf.token}"/>
+
+            <button type="submit"
+                    class="nav-link text-danger border-0 bg-transparent w-100 text-start">
+
+                <i class="bi bi-box-arrow-right me-2"></i>
+                Cerrar Sesión
+
+            </button>
+
+        </form>
+
+    </div>
+
+</nav>
+
+
+<!-- ============================================================
+     FRAGMENT: FOOTER
+     ============================================================ -->
+<footer th:fragment="footer"
+        class="text-center text-muted py-3 small border-top bg-white">
+
+    <div>
+        &copy; 2026
+        <strong>Sistema de Inventario</strong>
+        — Tienda de Abarrotes
+    </div>
+
+    <div>
+        Universidad Tecnológica del Perú · Marcos de Desarrollo Web
+    </div>
+
+</footer>
+
+
+<!-- ============================================================
+     FRAGMENT: SCRIPTS
+     ============================================================ -->
+<th:block th:fragment="scripts">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+</th:block>
+
+</body>
+</html>

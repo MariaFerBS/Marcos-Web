@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Registrar Venta')}"></head>
+
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+
+    <nav th:replace="~{fragments/layout :: sidebar('ventas')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1 p-4">
+
+            <!-- ENCABEZADO -->
+            <div class="mb-3">
+                <h3 class="mb-0 fw-bold">
+                    CONSULTAR STOCK / REGISTRAR VENTA
+                </h3>
+                <small class="text-muted">
+                    Consulte el stock disponible y registre ventas
+                </small>
+            </div>
+
+            <!-- MENSAJES -->
+            <div th:if="${error}"
+                 class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span th:text="${error}"></span>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="alert"></button>
+            </div>
+
+            <div th:if="${msg}"
+                 class="alert alert-success alert-dismissible fade show">
+                <span th:text="${msg}"></span>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="row g-3">
+
+                <!-- PANEL IZQUIERDO: CONSULTAR STOCK -->
+                <div class="col-lg-5">
+
+                    <div class="card shadow-sm border-0 h-100 p-3">
+
+                        <h5 class="fw-bold mb-3 text-secondary">
+                            CONSULTAR STOCK
+                        </h5>
+
+                        <!-- BUSCADOR -->
+                        <div class="input-group mb-2">
+
+                            <input type="text"
+                                   id="buscarProd"
+                                   class="form-control"
+                                   placeholder="Buscar producto..."/>
+
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-search"></i>
+                            </span>
+
+                        </div>
+
+                        <!-- FILTROS -->
+                        <div class="row g-2 mb-3">
+
+                            <div class="col-6">
+                                <label class="form-label small text-muted">
+                                    CATEGORÍA
+                                </label>
+
+                                <select id="filtroCat"
+                                        class="form-select form-select-sm">
+
+                                    <option value="">Todas</option>
+
+                                    <option th:each="c : ${categorias}"
+                                            th:value="${c.nomCat}"
+                                            th:text="${c.nomCat}">
+                                    </option>
+
+                                </select>
+                            </div>
+
+                            <div class="col-6">
+                                <label class="form-label small text-muted">
+                                    ESTADO
+                                </label>
+
+                                <select id="filtroEstado"
+                                        class="form-select form-select-sm">
+
+                                    <option value="">Todos</option>
+                                    <option value="Activo">Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <!-- TABLA DE STOCK -->
+                        <div class="table-responsive flex-grow-1"
+                             style="max-height:480px;overflow-y:auto;">
+
+                            <table class="table table-hover align-middle small"
+                                   id="tablaStock">
+
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="text-center">IMAGEN</th>
+                                        <th>PRODUCTO</th>
+                                        <th>CATEGORÍA</th>
+                                        <th class="text-center">STOCK</th>
+                                        <th class="text-center"></th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    <tr th:each="p : ${productos}"
+                                        th:data-id="${p.idProd}"
+                                        th:data-nombre="${p.nomProd}"
+                                        th:data-precio="${p.precioVenta}"
+                                        th:data-stock="${p.stockProd}"
+                                        th:data-cat="${p.nomCat}"
+                                        th:data-estado="${p.estado}">
+
+                                        <td class="text-center">
+
+                                            <img th:if="${p.imagen != null and !p.imagen.isBlank()}"
+                                                 th:src="@{'/images/' + ${p.imagen}}"
+                                                 alt="Producto"
+                                                 style="width:36px;height:36px;object-fit:cover;border-radius:4px;"/>
+
+                                            <i th:unless="${p.imagen != null and !p.imagen.isBlank()}"
+                                               class="bi bi-image text-muted fs-4"></i>
+
+                                        </td>
+
+                                        <td>
+                                            <span class="fw-semibold prod-nombre"
+                                                  th:text="${p.nomProd}">
+                                            </span>
+
+                                            <br/>
+
+                                            <small class="text-muted"
+                                                   th:text="'S/ ' + ${#numbers.formatDecimal(p.precioVenta, 1, 2)}">
+                                            </small>
+                                        </td>
+
+                                        <td class="prod-cat"
+                                            th:text="${p.nomCat}">
+                                        </td>
+
+                                        <td class="text-center">
+                                            <span class="badge"
+                                                  th:classappend="${p.stockBajo} ? 'bg-danger' : 'bg-secondary'"
+                                                  th:text="${p.stockProd}">
+                                            </span>
+                                        </td>
+
+                                        <td class="text-center">
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary btn-agregar"
+                                                    title="Agregar a la venta"
+                                                    th:disabled="${p.stockProd == null or p.stockProd <= 0 or p.estado == 'Inactivo'}"
+                                                    th:attr="data-id=${p.idProd}">
+
+                                                <i class="bi bi-plus-lg"></i>
+
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- CONTADOR -->
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top small text-muted">
+
+                            <span>
+                                TOTAL PRODUCTOS:
+                                <strong th:text="${#lists.size(productos)}">0</strong>
+                            </span>
+
+                            <span>Catálogo activo</span>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- PANEL DERECHO: REGISTRAR VENTA -->
+                <div class="col-lg-7">
+
+                    <form th:action="@{/ventas/guardar}"
+                          method="post"
+                          id="formVenta"
+                          class="card shadow-sm border-0 h-100 p-3 d-flex flex-column justify-content-between">
+
+                        <div>
+
+                            <h5 class="fw-bold mb-3 text-secondary">
+                                REGISTRAR VENTA
+                            </h5>
+
+                            <!-- DATOS DE VENTA -->
+                            <div class="row g-2 mb-3">
+
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">
+                                        NRO. DE VENTA
+                                    </label>
+
+                                    <input type="text"
+                                           name="nroVenta"
+                                           class="form-control form-control-sm bg-light fw-bold"
+                                           th:value="${nroVenta}"
+                                           readonly/>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">
+                                        FECHA
+                                    </label>
+
+                                    <input type="text"
+                                           class="form-control form-control-sm bg-light"
+                                           th:value="${#temporals.format(fechaHoy, 'dd/MM/yyyy')}"
+                                           readonly/>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">
+                                        VENDEDOR
+                                    </label>
+
+                                    <input type="text"
+                                           class="form-control form-control-sm bg-light"
+                                           th:value="${vendedor}"
+                                           readonly/>
+                                </div>
+
+                            </div>
+
+                            <!-- DATOS DEL CLIENTE -->
+                            <div class="row g-2 mb-3">
+
+                                <div class="col-md-5">
+
+                                    <label class="form-label small text-muted">
+                                        CLIENTE (OPCIONAL)
+                                    </label>
+
+                                    <input type="text"
+                                           name="nomCliente"
+                                           id="inputCliente"
+                                           class="form-control form-control-sm"
+                                           placeholder="Nombre del cliente o razón social"
+                                           maxlength="150"/>
+
+                                </div>
+
+                                <div class="col-md-3">
+
+                                    <label class="form-label small text-muted">
+                                        DNI / RUC
+                                    </label>
+
+                                    <input type="text"
+                                           name="numDocumentoCliente"
+                                           id="inputDocumento"
+                                           class="form-control form-control-sm"
+                                           maxlength="11"
+                                           placeholder="Ej: 71234567"/>
+                                    <small id="estadoDoc" class="text-muted" style="font-size: 0.72rem;"></small>
+
+                                </div>
+
+                                <div class="col-md-4">
+
+                                    <label class="form-label small text-muted">
+                                        CORREO ELECTRÓNICO
+                                    </label>
+
+                                    <input type="email"
+                                           name="emailCliente"
+                                           id="inputEmail"
+                                           class="form-control form-control-sm"
+                                           maxlength="150"
+                                           placeholder="cliente@correo.com"/>
+
+                                </div>
+
+                            </div>
+
+                            <!-- TABLA DE PRODUCTOS -->
+                            <label class="form-label small text-muted mb-1">
+                                PRODUCTOS
+                            </label>
+
+                            <div class="table-responsive border rounded mb-2"
+                                 style="min-height:220px;max-height:280px;overflow-y:auto;">
+
+                                <table class="table table-sm align-middle mb-0"
+                                       id="tablaDetalles">
+
+                                    <thead class="table-light sticky-top small">
+
+                                        <tr>
+                                            <th>PRODUCTO</th>
+
+                                            <th style="width:90px;"
+                                                class="text-center">
+                                                CANTIDAD
+                                            </th>
+
+                                            <th style="width:110px;"
+                                                class="text-end">
+                                                PRECIO UNITARIO
+                                            </th>
+
+                                            <th style="width:110px;"
+                                                class="text-end">
+                                                SUBTOTAL
+                                            </th>
+
+                                            <th style="width:45px;"
+                                                class="text-center">
+                                                ACCIÓN
+                                            </th>
+                                        </tr>
+
+                                    </thead>
+
+                                    <tbody id="cuerpoVenta">
+                                    </tbody>
+
+                                </table>
+                            </div>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary mb-3"
+                                    id="btnAgregarFila">
+
+                                <i class="bi bi-plus"></i>
+                                AGREGAR PRODUCTO
+
+                            </button>
+
+                        </div>
+
+                        <!-- TOTALES -->
+                        <div>
+
+                            <div class="row justify-content-end mb-3">
+
+                                <div class="col-md-6">
+
+                                    <div class="d-flex justify-content-between py-1 border-bottom small">
+
+                                        <span class="text-muted">
+                                            SUBTOTAL:
+                                        </span>
+
+                                        <span class="fw-semibold"
+                                              id="lblSubtotal">
+                                            S/ 0.00
+                                        </span>
+
+                                    </div>
+
+                                    <div class="d-flex justify-content-between py-1 border-bottom small align-items-center">
+
+                                        <span class="text-muted">
+                                            DESCUENTO:
+                                        </span>
+
+                                        <div class="d-flex align-items-center"
+                                             style="width:110px;">
+
+                                            <span class="me-1">S/</span>
+
+                                            <input type="number"
+                                                   step="0.01"
+                                                   min="0"
+                                                   value="0.00"
+                                                   name="descuento"
+                                                   id="inputDescuento"
+                                                   class="form-control form-control-sm text-end"/>
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="d-flex justify-content-between py-2 fs-5 fw-bold text-dark">
+
+                                        <span>TOTAL:</span>
+
+                                        <span id="lblTotal">
+                                            S/ 0.00
+                                        </span>
+
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            <!-- BOTONES -->
+                            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+
+                                <button type="button"
+                                        class="btn btn-outline-secondary px-4"
+                                        id="btnLimpiar">
+                                    LIMPIAR
+                                </button>
+
+                                <button type="submit"
+                                        class="btn btn-dark px-4 fw-semibold">
+                                    FINALIZAR VENTA
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+
+        </main>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<!-- JAVASCRIPT -->
+<script th:inline="javascript">
+
+    // CARGAR PRODUCTOS DESDE LAS FILAS DEL CATALOGO
+    const catalogo = Array.from(
+        document.querySelectorAll('#tablaStock tbody tr')
+    ).map(fila => ({
+        id: Number(fila.dataset.id),
+        nombre: fila.dataset.nombre || '',
+        precio: Number(fila.dataset.precio) || 0,
+        stock: Number(fila.dataset.stock) || 0,
+        categoria: fila.dataset.cat || '',
+        estado: fila.dataset.estado || ''
+    }));
+
+    let ultimoDocConsultado = '';
+
+    // FORMATO DE DINERO
+    function formatoDinero(valor) {
+        return 'S/ ' + Number(valor || 0).toFixed(2);
+    }
+
+    // BUSCAR PRODUCTO
+    function buscarProducto(id) {
+        return catalogo.find(p => p.id === Number(id));
+    }
+
+    // CONSULTA AUTOMÁTICA DE DNI / RUC CON APIPERUDEV
+    async function consultarDocumentoApi() {
+        const inputDoc = document.getElementById('inputDocumento');
+        const inputCliente = document.getElementById('inputCliente');
+        const estadoDoc = document.getElementById('estadoDoc');
+
+        // Solo permitir números
+        inputDoc.value = inputDoc.value.replace(/\D/g, '');
+        const doc = inputDoc.value;
+
+        // Consultar automáticamente al llegar a 8 (DNI) o 11 (RUC) dígitos
+        if (doc.length !== 8 && doc.length !== 11) {
+            ultimoDocConsultado = '';
+            estadoDoc.textContent = '';
+            return;
+        }
+
+        if (doc === ultimoDocConsultado) return;
+        ultimoDocConsultado = doc;
+
+        estadoDoc.className = 'text-primary';
+        estadoDoc.textContent = 'Buscando...';
+        inputCliente.placeholder = 'Consultando RENIEC / SUNAT...';
+
+        try {
+            const resp = await fetch(`/ventas/consultar-doc/${doc}`);
+            const json = await resp.json();
+
+            if (json.success && json.data) {
+                if (doc.length === 8) {
+                    const nombreCompleto = json.data.nombre_completo ||
+                        `${json.data.nombres || ''} ${json.data.apellido_paterno || ''} ${json.data.apellido_materno || ''}`.trim();
+                    inputCliente.value = nombreCompleto;
+                } else {
+                    inputCliente.value = json.data.nombre_o_razon_social || '';
+                }
+
+                estadoDoc.className = 'text-success';
+                estadoDoc.textContent = 'Encontrado';
+            } else {
+                inputCliente.value = '';
+                estadoDoc.className = 'text-danger';
+                estadoDoc.textContent = 'No encontrado';
+            }
+        } catch (err) {
+            estadoDoc.className = 'text-danger';
+            estadoDoc.textContent = 'Error de conexión';
+        } finally {
+            inputCliente.placeholder = 'Nombre del cliente o razón social';
+        }
+    }
+
+    // FILTRAR TABLA DE STOCK
+    function filtrarTablaStock() {
+
+        const texto = document.getElementById('buscarProd')?.value.toLowerCase() || '';
+        const categoria = document.getElementById('filtroCat').value;
+        const estado = document.getElementById('filtroEstado').value;
+
+        document.querySelectorAll('#tablaStock tbody tr').forEach(fila => {
+
+            const nombre = (fila.dataset.nombre || '').toLowerCase();
+            const cat = fila.dataset.cat || '';
+            const est = fila.dataset.estado || '';
+
+            const coincideTexto = nombre.includes(texto);
+            const coincideCat = !categoria || cat === categoria;
+            const coincideEstado = !estado || est === estado;
+
+            fila.style.display =
+                coincideTexto && coincideCat && coincideEstado ? '' : 'none';
+        });
+    }
+
+    // CREAR OPCIONES DE PRODUCTOS
+    function opcionesProductos(idSeleccionado = '') {
+
+        let html = '<option value="">Seleccionar producto</option>';
+
+        catalogo
+            .filter(p => p.estado === 'Activo' && p.stock > 0)
+            .forEach(p => {
+
+                const seleccionado =
+                    Number(idSeleccionado) === p.id ? 'selected' : '';
+
+                html += `
+                    <option value="${p.id}"
+                            data-precio="${p.precio}"
+                            data-stock="${p.stock}"
+                            ${seleccionado}>
+                        ${p.nombre}
+                    </option>
+                `;
+            });
+
+        return html;
+    }
+
+    // AGREGAR FILA AL CARRITO
+    function agregarFilaVacia(idProducto = '') {
+
+        const tbody = document.getElementById('cuerpoVenta');
+        const fila = document.createElement('tr');
+
+        fila.innerHTML = `
+            <td>
+                <select name="idProd"
+                        class="form-select form-select-sm select-prod"
+                        required>
+                    ${opcionesProductos(idProducto)}
+                </select>
+            </td>
+
+            <td>
+                <input type="number"
+                       name="cantDetalle"
+                       class="form-control form-control-sm text-center cant-prod"
+                       value="1"
+                       min="1"
+                       required/>
+            </td>
+
+            <td>
+                <input type="text"
+                       class="form-control form-control-sm text-end precio-prod bg-light"
+                       value="0.00"
+                       readonly/>
+            </td>
+
+            <td>
+                <input type="text"
+                       class="form-control form-control-sm text-end subtotal-prod bg-light fw-bold"
+                       value="0.00"
+                       readonly/>
+            </td>
+
+            <td class="text-center">
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger border-0 btn-eliminar"
+                        title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(fila);
+
+        const select = fila.querySelector('.select-prod');
+
+        if (idProducto !== '') {
+            actualizarFila(select);
+        }
+
+        calcularTotales();
+    }
+
+    // AGREGAR DESDE EL CATALOGO
+    function agregarDesdeCatalogo(idProducto) {
+
+        const producto = buscarProducto(idProducto);
+
+        if (!producto) {
+            alert('No se encontró el producto.');
+            return;
+        }
+
+        if (producto.estado !== 'Activo' || producto.stock <= 0) {
+            alert('El producto no tiene stock disponible.');
+            return;
+        }
+
+        const filas = document.querySelectorAll('#cuerpoVenta tr');
+
+        for (const fila of filas) {
+
+            const select = fila.querySelector('.select-prod');
+
+            if (Number(select.value) === producto.id) {
+
+                const cantidad = fila.querySelector('.cant-prod');
+                const nuevaCantidad = Number(cantidad.value || 0) + 1;
+
+                if (nuevaCantidad > producto.stock) {
+                    alert('Stock disponible: ' + producto.stock);
+                    return;
+                }
+
+                cantidad.value = nuevaCantidad;
+                calcularTotales();
+                return;
+            }
+        }
+
+        agregarFilaVacia(producto.id);
+    }
+
+    // ACTUALIZAR PRECIO Y STOCK
+    function actualizarFila(select) {
+
+        const fila = select.closest('tr');
+        const producto = buscarProducto(select.value);
+
+        const precio = fila.querySelector('.precio-prod');
+        const cantidad = fila.querySelector('.cant-prod');
+
+        if (!producto) {
+            precio.value = '0.00';
+            cantidad.removeAttribute('max');
+            calcularTotales();
+            return;
+        }
+
+        precio.value = producto.precio.toFixed(2);
+        cantidad.max = producto.stock;
+
+        if (Number(cantidad.value) < 1 ||
+            Number(cantidad.value) > producto.stock) {
+            cantidad.value = 1;
+        }
+
+        calcularTotales();
+    }
+
+    // ELIMINAR PRODUCTO
+    function eliminarFila(boton) {
+        boton.closest('tr').remove();
+        calcularTotales();
+    }
+
+    // CALCULAR TOTALES
+    function calcularTotales() {
+
+        let subtotalGeneral = 0;
+
+        document.querySelectorAll('#cuerpoVenta tr').forEach(fila => {
+
+            const select = fila.querySelector('.select-prod');
+            const cantidadInput = fila.querySelector('.cant-prod');
+            const precioInput = fila.querySelector('.precio-prod');
+            const subtotalInput = fila.querySelector('.subtotal-prod');
+
+            const producto = buscarProducto(select.value);
+
+            if (!producto) {
+                precioInput.value = '0.00';
+                subtotalInput.value = '0.00';
+                return;
+            }
+
+            let cantidad = Number(cantidadInput.value);
+
+            if (!Number.isFinite(cantidad) || cantidad < 1) {
+                cantidad = 1;
+                cantidadInput.value = 1;
+            }
+
+            if (cantidad > producto.stock) {
+                cantidad = producto.stock;
+                cantidadInput.value = cantidad;
+            }
+
+            const subtotal = producto.precio * cantidad;
+
+            precioInput.value = producto.precio.toFixed(2);
+            subtotalInput.value = subtotal.toFixed(2);
+
+            subtotalGeneral += subtotal;
+        });
+
+        const inputDescuento = document.getElementById('inputDescuento');
+
+        let descuento = Number(inputDescuento.value) || 0;
+
+        descuento = Math.max(0, Math.min(descuento, subtotalGeneral));
+
+        inputDescuento.value = descuento.toFixed(2);
+
+        const total = subtotalGeneral - descuento;
+
+        document.getElementById('lblSubtotal').textContent =
+            formatoDinero(subtotalGeneral);
+
+        document.getElementById('lblTotal').textContent =
+            formatoDinero(total);
+    }
+
+    // LIMPIAR FORMULARIO
+    function limpiarFormulario() {
+
+        document.getElementById('cuerpoVenta').innerHTML = '';
+
+        document.getElementById('inputCliente').value = '';
+        document.getElementById('inputDocumento').value = '';
+        document.getElementById('estadoDoc').textContent = '';
+        ultimoDocConsultado = '';
+        document.getElementById('inputEmail').value = '';
+        document.getElementById('inputDescuento').value = '0.00';
+
+        calcularTotales();
+    }
+
+    // EVENTOS DEL CATALOGO
+    document.querySelectorAll('.btn-agregar').forEach(boton => {
+
+        boton.addEventListener('click', function () {
+            agregarDesdeCatalogo(this.dataset.id);
+        });
+
+    });
+
+    // EVENTOS DE FILAS DEL CARRITO
+    document.getElementById('cuerpoVenta').addEventListener('change', function (event) {
+
+        if (event.target.classList.contains('select-prod')) {
+            actualizarFila(event.target);
+        }
+
+        if (event.target.classList.contains('cant-prod')) {
+            calcularTotales();
+        }
+
+    });
+
+    document.getElementById('cuerpoVenta').addEventListener('input', function (event) {
+
+        if (event.target.classList.contains('cant-prod')) {
+            calcularTotales();
+        }
+
+    });
+
+    document.getElementById('cuerpoVenta').addEventListener('click', function (event) {
+
+        const boton = event.target.closest('.btn-eliminar');
+
+        if (boton) {
+            eliminarFila(boton);
+        }
+
+    });
+
+    // EVENTOS DE FILTROS
+    document.getElementById('buscarProd').addEventListener('input', filtrarTablaStock);
+    document.getElementById('filtroCat').addEventListener('change', filtrarTablaStock);
+    document.getElementById('filtroEstado').addEventListener('change', filtrarTablaStock);
+
+    // EVENTO DE CONSULTA DNI / RUC
+    document.getElementById('inputDocumento').addEventListener('input', consultarDocumentoApi);
+
+    // BOTONES
+    document.getElementById('btnAgregarFila').addEventListener('click', function () {
+        agregarFilaVacia();
+    });
+
+    document.getElementById('btnLimpiar').addEventListener('click', limpiarFormulario);
+
+    document.getElementById('inputDescuento').addEventListener('input', calcularTotales);
+
+    // VALIDAR FORMULARIO
+    document.getElementById('formVenta').addEventListener('submit', function (event) {
+
+        const filas = document.querySelectorAll('#cuerpoVenta tr');
+
+        if (filas.length === 0) {
+            event.preventDefault();
+            alert('Debe agregar al menos un producto.');
+            return;
+        }
+
+        for (const fila of filas) {
+
+            const select = fila.querySelector('.select-prod');
+            const cantidad = fila.querySelector('.cant-prod');
+            const producto = buscarProducto(select.value);
+
+            if (!producto || Number(cantidad.value) <= 0) {
+                event.preventDefault();
+                alert('Seleccione un producto y una cantidad válida.');
+                return;
+            }
+
+            if (Number(cantidad.value) > producto.stock) {
+                event.preventDefault();
+                alert('La cantidad supera el stock disponible de ' + producto.nombre);
+                return;
+            }
+        }
+
+    });
+
+    // INICIALIZAR
+    calcularTotales();
+
+</script>
+
+</body>
+</html>

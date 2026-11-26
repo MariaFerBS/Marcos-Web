@@ -1,0 +1,438 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Entrada de Mercancía')}"></head>
+
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+
+    <nav th:replace="~{fragments/layout :: sidebar('movimientos')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1 p-4">
+
+            <!-- ENCABEZADO -->
+            <div class="mb-3">
+                <h3 class="mb-0 fw-bold">ENTRADA DE MERCANCÍA</h3>
+                <small class="text-muted">
+                    Recepción de compras a proveedores e incremento de stock
+                </small>
+            </div>
+
+            <!-- ALERTAS -->
+            <div th:if="${error}"
+                 class="alert alert-danger alert-dismissible fade show">
+
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span th:text="${error}"></span>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="alert"></button>
+            </div>
+
+            <form th:action="@{/movimientos/guardar}"
+                  method="post"
+                  class="card shadow-sm border-0 p-4">
+
+                <!-- DATOS DE RECEPCIÓN -->
+                <div class="row g-3 mb-3">
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            TIPO DE OPERACIÓN
+                        </label>
+
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-success text-white">
+                                <i class="bi bi-box-arrow-in-down"></i>
+                            </span>
+
+                            <input type="text"
+                                   class="form-control form-control-sm bg-light fw-bold text-success"
+                                   value="Entrada / Compra"
+                                   readonly/>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            FECHA DE RECEPCIÓN
+                        </label>
+
+                        <input type="text"
+                               class="form-control form-control-sm bg-light"
+                               th:value="${#temporals.format(fechaHoy, 'dd/MM/yyyy')}"
+                               readonly/>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            NRO. GUÍA / FACTURA
+                        </label>
+
+                        <input type="text"
+                               name="nroReferencia"
+                               class="form-control form-control-sm"
+                               placeholder="Ej: F001-00234, Guía de Remisión"/>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            PROVEEDOR *
+                        </label>
+
+                        <select name="idProv"
+                                class="form-select form-select-sm"
+                                required>
+
+                            <option value="">-- Seleccionar Proveedor --</option>
+
+                            <option th:each="prov : ${proveedores}"
+                                    th:value="${prov.idProv}"
+                                    th:text="${prov.nomProv}">
+                            </option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <!-- OBSERVACIONES Y AGREGAR FILA -->
+                <div class="row g-2 mb-3 align-items-end">
+
+                    <div class="col-md-10">
+                        <label class="form-label small fw-semibold">
+                            OBSERVACIONES
+                        </label>
+
+                        <input type="text"
+                               name="observaciones"
+                               class="form-control form-control-sm"
+                               placeholder="Observaciones de la entrega (lote recibido, estado de cajas, etc.)"/>
+                    </div>
+
+                    <div class="col-md-2 text-end">
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary w-100"
+                                onclick="agregarFila()">
+
+                            <i class="bi bi-plus-lg me-1"></i>
+                            AGREGAR FILA
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- TABLA DE MOVIMIENTOS -->
+                <div class="table-responsive border rounded mb-3">
+
+                    <table class="table table-hover align-middle mb-0 small"
+                           id="tablaMovimientos">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width:250px;">PRODUCTO</th>
+                                <th>DESCRIPCIÓN</th>
+                                <th style="width:110px;" class="text-center">
+                                    CANT. ENTRADA
+                                </th>
+                                <th style="width:100px;" class="text-center">
+                                    UNIDAD
+                                </th>
+                                <th style="width:130px;" class="text-end">
+                                    PRECIO COMPRA
+                                </th>
+                                <th style="width:130px;" class="text-end">
+                                    SUBTOTAL
+                                </th>
+                                <th style="width:60px;" class="text-center">
+                                    ACCIÓN
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="cuerpoTabla">
+                            <!-- FILAS DINÁMICAS -->
+                        </tbody>
+
+                    </table>
+                </div>
+
+                <!-- TOTAL COMPRA -->
+                <div class="row justify-content-end mb-3">
+
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center p-2 border rounded bg-light">
+
+                            <span class="fw-bold">
+                                TOTAL COMPRA:
+                            </span>
+
+                            <span class="fs-5 fw-bold text-dark"
+                                  id="lblTotalGeneral">
+                                S/ 0.00
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- BOTONES -->
+                <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+
+                    <a th:href="@{/dashboard}"
+                       class="btn btn-outline-secondary px-4">
+                        CANCELAR
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-success px-4 fw-semibold">
+
+                        <i class="bi bi-box-arrow-in-down me-1"></i>
+                        REGISTRAR ENTRADA
+                    </button>
+
+                </div>
+
+            </form>
+
+        </main>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<script th:inline="javascript">
+
+    // CATÁLOGO DE PRODUCTOS DESDE SPRING BOOT
+    const productosCatalogo = /*[[${productos}]]*/ [];
+
+    // GENERAR CATEGORÍAS DISPONIBLES
+    function opcionesCategorias() {
+
+        const categorias = [...new Set(
+            productosCatalogo
+                .map(p => p.nomCat)
+                .filter(c => c != null && c !== '')
+        )];
+
+        let html = '<option value="">Seleccionar categoría</option>';
+
+        categorias.forEach(cat => {
+
+            const opcion = document.createElement('option');
+            opcion.value = cat;
+            opcion.textContent = cat;
+
+            html += opcion.outerHTML;
+        });
+
+        return html;
+    }
+
+    // GENERAR PRODUCTOS SEGÚN CATEGORÍA
+    function opcionesSelect(categoriaSeleccionada = '') {
+
+        let html = '<option value="">Seleccionar producto</option>';
+
+        productosCatalogo
+            .filter(p => p.nomCat === categoriaSeleccionada)
+            .forEach(p => {
+
+                const opcion = document.createElement('option');
+
+                opcion.value = p.idProd;
+                opcion.textContent = p.nomProd;
+                opcion.dataset.desc = p.descProd || '';
+                opcion.dataset.unidad = p.unidadMedida || 'Unidad';
+                opcion.dataset.pcompra = p.precioCompra ?? 0;
+
+                html += opcion.outerHTML;
+            });
+
+        return html;
+    }
+
+    // ACTUALIZAR PRODUCTOS AL CAMBIAR CATEGORÍA
+    function cambiarCategoria(selectCategoria) {
+
+        const fila = selectCategoria.closest('tr');
+        const selectProducto = fila.querySelector('.sel-prod');
+
+        selectProducto.innerHTML = opcionesSelect(
+            selectCategoria.value
+        );
+
+        actualizarInfoProducto(selectProducto);
+    }
+
+    // AGREGAR NUEVA FILA
+    function agregarFila() {
+
+        const tbody = document.getElementById('cuerpoTabla');
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+            <td>
+                <select class="form-select form-select-sm mb-1 sel-cat"
+                        aria-label="Categoría"
+                        onchange="cambiarCategoria(this)">
+
+                    ${opcionesCategorias()}
+
+                </select>
+
+                <select name="idProd"
+                        class="form-select form-select-sm sel-prod"
+                        required
+                        onchange="actualizarInfoProducto(this)">
+
+                    <option value="">Seleccionar producto</option>
+
+                </select>
+            </td>
+
+            <td>
+                <input type="text"
+                       class="form-control form-control-sm desc-prod bg-light border-0"
+                       readonly
+                       placeholder="---"/>
+            </td>
+
+            <td>
+                <input type="number"
+                       name="cantMov"
+                       class="form-control form-control-sm text-center cant-prod"
+                       value="1"
+                       min="1"
+                       required
+                       oninput="calcularSubtotales()"/>
+            </td>
+
+            <td class="text-center">
+                <span class="unidad-prod text-muted">
+                    ---
+                </span>
+            </td>
+
+            <td>
+                <div class="input-group input-group-sm">
+
+                    <span class="input-group-text bg-light border-0">
+                        S/
+                    </span>
+
+                    <input type="number"
+                           step="0.01"
+                           min="0"
+                           class="form-control form-control-sm text-end precio-prod"
+                           value="0.00"
+                           oninput="calcularSubtotales()"/>
+                </div>
+            </td>
+
+            <td>
+                <input type="text"
+                       class="form-control form-control-sm text-end subtotal-prod bg-light fw-bold border-0"
+                       readonly
+                       value="S/ 0.00"/>
+            </td>
+
+            <td class="text-center">
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger border-0"
+                        onclick="eliminarFila(this)">
+
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    }
+
+    // ACTUALIZAR DATOS DEL PRODUCTO
+    function actualizarInfoProducto(selectElem) {
+
+        const fila = selectElem.closest('tr');
+        const opt = selectElem.options[selectElem.selectedIndex];
+
+        if (selectElem.value && opt) {
+
+            fila.querySelector('.desc-prod').value =
+                opt.dataset.desc || '';
+
+            fila.querySelector('.unidad-prod').innerText =
+                opt.dataset.unidad || 'Unidad';
+
+            const precioCompra = parseFloat(
+                opt.dataset.pcompra || '0'
+            ) || 0;
+
+            fila.querySelector('.precio-prod').value =
+                precioCompra.toFixed(2);
+
+        } else {
+
+            fila.querySelector('.desc-prod').value = '';
+            fila.querySelector('.unidad-prod').innerText = '---';
+            fila.querySelector('.precio-prod').value = '0.00';
+        }
+
+        calcularSubtotales();
+    }
+
+    // ELIMINAR FILA
+    function eliminarFila(boton) {
+
+        boton.closest('tr').remove();
+
+        calcularSubtotales();
+    }
+
+    // CALCULAR SUBTOTALES Y TOTAL
+    function calcularSubtotales() {
+
+        let totalGeneral = 0;
+
+        const filas = document.querySelectorAll('#cuerpoTabla tr');
+
+        filas.forEach(fila => {
+
+            const cantidad = parseFloat(
+                fila.querySelector('.cant-prod').value
+            ) || 0;
+
+            const precio = parseFloat(
+                fila.querySelector('.precio-prod').value
+            ) || 0;
+
+            const subtotal = cantidad * precio;
+
+            fila.querySelector('.subtotal-prod').value =
+                'S/ ' + subtotal.toFixed(2);
+
+            totalGeneral += subtotal;
+        });
+
+        document.getElementById('lblTotalGeneral').innerText =
+            'S/ ' + totalGeneral.toFixed(2);
+    }
+
+    // INICIALIZAR PRIMERA FILA
+    document.addEventListener('DOMContentLoaded', () => {
+        agregarFila();
+    });
+
+</script>
+
+</body>
+</html>

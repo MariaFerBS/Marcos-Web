@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Comprobante de Venta')}"></head>
+
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+
+    <nav th:replace="~{fragments/layout :: sidebar('ventas')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1 p-4">
+
+            <div class="container">
+
+                <!-- MENSAJES -->
+                <div th:if="${msg}" class="alert alert-success">
+                    <span th:text="${msg}"></span>
+                </div>
+
+                <div th:if="${error}" class="alert alert-danger">
+                    <span th:text="${error}"></span>
+                </div>
+
+                <div class="card shadow-sm border-0 mx-auto p-4"
+                     style="max-width:700px;">
+
+                    <!-- ENCABEZADO -->
+                    <div class="text-center pb-3 border-bottom">
+
+                        <h4 class="fw-bold mb-1">
+                            TIENDA DE ABARROTES
+                        </h4>
+
+                        <small class="text-muted">
+                            RUC: 20456789123
+                        </small>
+
+                        <br/>
+
+                        <small class="text-muted">
+                            Av. Universitaria 1234 - Lima
+                        </small>
+
+                        <h5 class="mt-3 fw-bold text-primary">
+                            COMPROBANTE DE VENTA
+                        </h5>
+
+                        <span class="badge bg-dark fs-6"
+                              th:text="'B001-' + ${#numbers.formatInteger(venta.idVenta, 6)}">
+                        </span>
+
+                    </div>
+
+                    <!-- DATOS DEL CLIENTE -->
+                    <div class="row my-3 small">
+
+                        <div class="col-7">
+
+                            <strong>Fecha:</strong>
+                            <span th:text="${venta.fecVenta}"></span>
+
+                            <br/>
+
+                            <strong>Cliente:</strong>
+                            <span th:text="${venta.nomCliente}"></span>
+
+                            <br/>
+
+                            <strong>Documento:</strong>
+                            <span th:text="${venta.numDocumentoCliente}"></span>
+
+                            <br/>
+
+                            <strong>Correo:</strong>
+                            <span th:text="${venta.emailCliente != null ? venta.emailCliente : 'No registrado'}"></span>
+
+                        </div>
+
+                        <div class="col-5 text-end">
+
+                            <strong>Medio de pago:</strong>
+                            <span th:text="${venta.metodoPago}"></span>
+
+                            <br/>
+
+                            <strong>Moneda:</strong> SOLES (S/)
+
+                        </div>
+
+                    </div>
+
+                    <!-- PRODUCTOS -->
+                    <div class="table-responsive">
+
+                        <table class="table table-sm table-bordered">
+
+                            <thead class="table-light small">
+
+                                <tr>
+                                    <th>Cant.</th>
+                                    <th>Descripción</th>
+                                    <th class="text-end">P. Unit.</th>
+                                    <th class="text-end">Importe</th>
+                                </tr>
+
+                            </thead>
+
+                            <tbody class="small">
+
+                                <tr th:each="d : ${venta.detalles}">
+
+                                    <td th:text="${d.cantDetalle}"></td>
+
+                                    <td th:text="${d.nomProd}"></td>
+
+                                    <td class="text-end"
+                                        th:text="'S/ ' + ${#numbers.formatDecimal(d.precioUnitario, 1, 2)}">
+                                    </td>
+
+                                    <td class="text-end"
+                                        th:text="'S/ ' + ${#numbers.formatDecimal(d.subtotal, 1, 2)}">
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                    <!-- TOTALES -->
+                    <div class="d-flex justify-content-end">
+
+                        <div style="width:250px;">
+
+                            <div class="d-flex justify-content-between mb-2">
+
+                                <span>Subtotal:</span>
+
+                                <strong th:text="'S/ ' + ${#numbers.formatDecimal(#aggregates.sum(venta.detalles.![subtotal]), 1, 2)}">
+                                </strong>
+
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-2">
+
+                                <span>Descuento:</span>
+
+                                <strong th:text="'S/ ' + ${#numbers.formatDecimal(venta.descuento, 1, 2)}">
+                                </strong>
+
+                            </div>
+
+                            <div class="d-flex justify-content-between border-top pt-2">
+
+                                <strong class="fs-5">TOTAL:</strong>
+
+                                <strong class="fs-5 text-primary"
+                                        th:text="'S/ ' + ${#numbers.formatDecimal(venta.totalVenta, 1, 2)}">
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- CODIGO QR -->
+                    <div class="text-center border-top mt-4 pt-3">
+
+                        <h6 class="fw-bold">
+                            CÓDIGO QR INFORMATIVO
+                        </h6>
+
+                        <img th:src="'data:image/png;base64,' + ${qrBase64}"
+                             alt="Código QR de la venta"
+                             style="width:150px;height:150px;"/>
+
+                        <p class="small text-muted mt-2">
+                            Contiene información de esta venta.
+                        </p>
+
+                    </div>
+
+                    <div class="text-center mt-3">
+
+                        <p class="fw-semibold">
+                            ¡Gracias por su compra!
+                        </p>
+
+                        <small class="text-muted">
+                            Comprobante interno de venta. No constituye una boleta electrónica autorizada por SUNAT.
+                        </small>
+
+                    </div>
+
+                    <!-- ACCIONES -->
+                    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 border-top pt-3">
+
+                        <a th:href="@{/ventas/nueva}"
+                           class="btn btn-outline-primary">
+                            <i class="bi bi-cart-plus me-1"></i>
+                            Nueva venta
+                        </a>
+
+                        <a th:href="@{/ventas/boleta/{id}/pdf(id=${venta.idVenta})}"
+                           class="btn btn-danger">
+                            <i class="bi bi-file-pdf me-1"></i>
+                            Descargar PDF
+                        </a>
+
+                    </div>
+
+                    <!-- ENVIAR POR CORREO -->
+                    <form th:action="@{/ventas/boleta/{id}/enviar(id=${venta.idVenta})}"
+                          method="post"
+                          class="mt-4 border rounded p-3">
+
+                        <h6 class="fw-bold mb-3">
+                            <i class="bi bi-envelope me-2"></i>
+                            ENVIAR COMPROBANTE POR CORREO
+                        </h6>
+
+                        <label class="form-label">
+                            Correo electrónico del cliente
+                        </label>
+
+                        <input type="email"
+                               name="emailCliente"
+                               class="form-control mb-3"
+                               th:value="${venta.emailCliente}"
+                               placeholder="cliente@correo.com"
+                               maxlength="150"
+                               required/>
+
+                        <button type="submit"
+                                class="btn btn-success w-100">
+
+                            <i class="bi bi-send me-2"></i>
+                            Enviar comprobante
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </main>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

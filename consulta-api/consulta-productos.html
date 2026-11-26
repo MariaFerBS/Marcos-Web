@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Productos</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fa;
+            margin: 0;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #17375e;
+        }
+
+        .contenedor {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #17375e;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        #mensaje {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+    <h1>Inventario de Productos</h1>
+    <p>Consulta de productos mediante una API REST de Spring Boot.</p>
+
+    <button onclick="cargarProductos()">Actualizar productos</button>
+
+    <p id="mensaje">Cargando productos...</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Proveedor</th>
+                <th>Precio compra</th>
+                <th>Precio venta</th>
+                <th>Stock</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+
+        <tbody id="tablaProductos"></tbody>
+    </table>
+</div>
+
+<script>
+    async function cargarProductos() {
+        const mensaje = document.getElementById("mensaje");
+        const tabla = document.getElementById("tablaProductos");
+
+        mensaje.textContent = "Consultando API...";
+        tabla.innerHTML = "";
+
+        try {
+            const respuesta = await fetch(
+               "http://127.0.0.1:8080/productos/dto",
+                { credentials: "include" }
+            );
+
+            if (!respuesta.ok) {
+                throw new Error("Error HTTP: " + respuesta.status);
+            }
+
+            const productos = await respuesta.json();
+
+            productos.forEach(producto => {
+                const fila = document.createElement("tr");
+
+                const valores = [
+                    producto.codProd,
+                    producto.nomProd,
+                    producto.nomCat,
+                    producto.nomProv,
+                    "S/ " + producto.precioCompra,
+                    "S/ " + producto.precioVenta,
+                    producto.stockProd,
+                    producto.estado
+                ];
+
+                valores.forEach(valor => {
+                    const celda = document.createElement("td");
+                    celda.textContent = valor ?? "";
+                    fila.appendChild(celda);
+                });
+
+                tabla.appendChild(fila);
+            });
+
+            mensaje.textContent =
+                "Se encontraron " + productos.length + " productos.";
+
+        } catch (error) {
+            mensaje.textContent =
+                "No se pudieron cargar los productos: " + error.message;
+        }
+    }
+
+    cargarProductos();
+</script>
+
+</body>
+</html>
