@@ -15,6 +15,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.FetchType;
 
 @Entity
 @Table(name = "ventas")
@@ -49,7 +50,7 @@ public class Venta {
     @Column(name = "metodo_pago")
     private String metodoPago;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(
         name = "id_venta",
         referencedColumnName = "id_venta"

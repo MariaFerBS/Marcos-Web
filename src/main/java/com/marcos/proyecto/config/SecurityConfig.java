@@ -81,7 +81,10 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of(
             "http://localhost:*",
             "http://127.0.0.1:*",
-            "https://*.onrender.com"
+            "https://*.onrender.com",
+            "http://192.168.*.*:*",  // <--- AÑADE ESTO (Para redes Wi-Fi comunes)
+            "http://10.*.*.*:*",     // <--- AÑADE ESTO
+            "http://172.16.*.*:*" 
         ));
 
         configuration.setAllowedMethods(List.of(
@@ -114,10 +117,7 @@ public class SecurityConfig {
 
         http
             // Mantener CSRF activo con entrega inmediata en sesión
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(new HttpSessionCsrfTokenRepository())
-                .csrfTokenRequestHandler(requestHandler)
-            )
+            .csrf(csrf -> csrf.disable())
 
             // Crear sesión desde la primera petición GET /login
             .sessionManagement(session -> session

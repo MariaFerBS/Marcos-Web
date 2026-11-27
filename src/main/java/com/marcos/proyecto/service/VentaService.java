@@ -10,6 +10,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import com.marcos.proyecto.modelo.DetalleVenta;
 import com.marcos.proyecto.modelo.Producto;
 import com.marcos.proyecto.modelo.Venta;
@@ -205,6 +206,18 @@ public class VentaService {
         venta.setEmailCliente(correo);
 
         ventaRepository.save(venta);
+    }
+
+    // LISTAR VENTAS POR FECHA EXACTA
+    @Transactional(readOnly = true)
+    public List<Venta> listarPorFecha(LocalDate fecha) {
+        return ventaRepository.findByFecVentaOrderByIdVentaDesc(fecha);
+    }
+
+    // RESUMEN AGRUPADO POR DÍA (FECHA, CANTIDAD DE VENTAS, TOTAL RECAUDADO)
+    @Transactional(readOnly = true)
+    public List<Object[]> obtenerResumenDiario() {
+        return ventaRepository.obtenerResumenPorDia();
     }
 
 }

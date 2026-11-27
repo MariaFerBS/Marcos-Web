@@ -446,4 +446,44 @@ public class VentaController {
 
         return "redirect:/ventas/boleta/" + id;
     }
+
+    // REGISTRO DE VENTAS POR DÍA
+    @GetMapping("/registro")
+    public String registroVentasPorDia(
+            @RequestParam(required = false) LocalDate fecha,
+            Model model,
+            HttpSession session) {
+
+        Usuario usuario = obtenerUsuarioActivo(session);
+
+        if (usuario == null) {
+            return "redirect:/login";
+        }
+
+        // Si no selecciona fecha, muestra el día de hoy
+        LocalDate fechaSeleccionada = (fecha != null) ? fecha : LocalDate.now();
+
+        List<Venta> ventasDelDia = ventaService.listarPorFecha(fechaSeleccionada);
+
+        // Calcular métricas del día seleccionado
+        BigDecimal totalRecaudadoDia = ventasDelDia.stream()
+                .map(v -> v.getTotalVenta() != null ? v.getTotalVenta() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int cantidadVentasDia = ventasDelDia.size();
+
+        int productosVendidosDia = ventasDelDia.stream()
+                .flatMap(v -> v.getDetalles().stream())
+                .mapToInt(d -> d.getCantDetalle() != null ? d.getCantDetalle() : 0)
+                .sum();
+
+        model.addAttribute("fechaSeleccionada", fechaSeleccionada);
+        model.addAttribute("ventasDelDia", ventasDelDia);
+        model.addAttribute("totalRecaudadoDia", totalRecaudadoDia);
+        model.addAttribute("cantidadVentasDia", cantidadVentasDia);
+        model.addAttribute("productosVendidosDia", productosVendidosDia);
+        model.addAttribute("resumenPorDia", ventaService.obtenerResumenDiario());
+
+        return "ventas/registro";
+    }
 }

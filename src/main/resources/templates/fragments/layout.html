@@ -210,6 +210,19 @@
             </a>
         </li>
 
+        <!-- REGISTRO DE VENTAS POR DÍA -->
+        <li class="nav-item mb-1">
+
+            <a th:href="@{/ventas/registro}"
+               th:classappend="${activo == 'registro-ventas'} ? 'active' : ''"
+               class="nav-link">
+
+                <i class="bi bi-receipt-cutoff me-2"></i>
+                Registro de Ventas
+
+            </a>
+        </li>
+
 
         <!-- GESTIÓN DE USUARIOS -->
         <li class="nav-item mb-1"
@@ -279,6 +292,7 @@
         <form th:action="@{/logout}" method="post">
 
             <input type="hidden"
+                   th:if="${_csrf != null}"
                    th:name="${_csrf.parameterName}"
                    th:value="${_csrf.token}"/>
 
