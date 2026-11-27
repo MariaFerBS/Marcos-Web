@@ -69,15 +69,15 @@ public class SecurityConfig {
         };
     }
 
-    // Configuración CORS compatible con local y Render
+    // Configuración CORS para permitir la conexión desde Live Server
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(List.of(
-            "http://localhost:*",
-            "http://127.0.0.1:*",
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:5500",
+            "http://127.0.0.1:5500",
             "https://*.onrender.com"
         ));
 
@@ -106,9 +106,6 @@ public class SecurityConfig {
             throws Exception {
 
         http
-            // Desactivar CSRF para evitar errores 403 en formularios detrás del proxy de Render
-            .csrf(csrf -> csrf.disable())
-
             // Activar CORS
             .cors(Customizer.withDefaults())
 
